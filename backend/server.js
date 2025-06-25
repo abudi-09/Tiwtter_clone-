@@ -6,9 +6,10 @@ import connectMongoDB from "./db/connectMongoDB.js";
 
 // Load environment variables from .env file
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 5000;
 app.use("/api/auth", authRoutes);
-app.use(express.json()); // Middleware to parse JSON bodies
+// Middleware to parse JSON bodies
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
   connectMongoDB();
