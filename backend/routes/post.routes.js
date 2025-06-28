@@ -5,14 +5,16 @@ import {
   likeUnlikePost,
   deletePost,
   getAllPosts,
-  getFollowingPosts,
+  getfollowingPosts,
   getlikedPosts,
+  getUserPosts,
 } from "../controllers/post.controller.js";
 import { protectRoute } from "../middleware/protectRoutes.js";
 const router = express.Router();
 router.get("/likes", protectRoute, getlikedPosts); // Get all posts
 router.get("/all", protectRoute, getAllPosts); // Assuming you have a function to get all posts
-router.get("/following", protectRoute, getFollowingPosts);
+router.get("/following", protectRoute, getfollowingPosts);
+router.get("/user/:username", protectRoute, getUserPosts);
 router.post("/create", protectRoute, createPost);
 router.post("/comment/:id", protectRoute, commentPosts);
 router.post("/like/:id", protectRoute, likeUnlikePost);

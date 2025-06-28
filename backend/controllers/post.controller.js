@@ -2,7 +2,7 @@ import User from "../models/user.model.js"; // Import User model
 import Post from "../models/post.model.js"; // Import Post model
 import { v2 as cloudinary } from "cloudinary"; // Import Cloudinary for image uploads
 import Notification from "../models/notification.model.js"; // Import Notification model
-import { populate } from "dotenv";
+
 export const createPost = async (req, res) => {
   // Function to create a new post
   try {
@@ -194,33 +194,56 @@ export const getlikedPosts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-export const getFollowingPosts = async (req, res) => {
-  // Function to get posts from users that the current user is following
+export const getfollowingPosts = async (req, res) => {
   try {
-    // Get the user ID from the request
-    const currentUser = await User.findById(req.user._id); // Get the current user
-    if (!currentUser) {
-      // Check if the current user exists
-      return res.status(404).json({ error: "User not found" });
-    }
-    const following = currentUser.following; // Get the list of users that the current user is following
-    const posts = await Post.find({ user: { $in: following } }) // Find posts from users that the current user is following
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const following = user.following;
+
+    const feedPosts = await Post.find({ user: { $in: following } })
       .sort({ createdAt: -1 })
       .populate({
         path: "user",
-        select: "-password", // Populate user details
+        select: "-password",
+      })
+      .populate({
+        path: "comments.user",
+        select: "-password",
+      });
+
+    res.status(200).json(feedPosts);
+  } catch (error) {
+    console.log("Error in getFollowingPosts controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const getUserPosts = async (req, res) => {
+  // Function to get posts of a specific user
+  try {
+    const { username } = req.params; // Get the username from the request parameters
+    const user = await User.findOne({ username }).select("-password"); // Find the user by username and exclude password
+    if (!user) {
+      // Check if the user exists
+      return res.status(404).json({ error: "User not found" });
+    }
+    const posts = await Post.find({ user: user._id }) // Find posts by user ID
+      .sort({ createdAt: -1 }) // Sort posts by creation date in descending order
+      .populate({
+        path: "user",
+        select: "-password", // Populate user details excluding password
       })
       .populate({
         path: "Comments.user",
-        select: "-password", // Populate user details for comments
+        select: "-password", // Populate user details for comments excluding password
       });
-    res.status(200).json(posts); // Respond with the list of posts from followed users
+    res.status(200).json(posts); // Respond with the user's posts
   } catch (error) {
-    console.log("Error in getFollowingPosts: ", error.message);
-    res.status(500).json({ error: error.message });
+    console.log("Error in getUserPosts: ", error.message);
+    res.status(500).json({ error: error.message }); // Respond with error message
   }
 };
-
 // This code defines the functions for creating, deleting, commenting on, liking/unliking, and retrieving posts.
 // It uses Mongoose to interact with the MongoDB database and Cloudinary for image uploads.
 // The functions handle various operations related to posts in a social media application, including error handling and response formatting.
