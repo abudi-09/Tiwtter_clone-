@@ -4,6 +4,8 @@ import { v2 as cloudinary } from "cloudinary";
 dotenv.config();
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import postRoutes from "./routes/post.routes.js";
+// Importing the connectMongoDB function to establish a connection to MongoDB
 import connectMongoDB from "./db/connectMongoDB.js";
 import cookieParser from "cookie-parser";
 const app = express();
@@ -18,6 +20,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/posts", postRoutes);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectMongoDB();
