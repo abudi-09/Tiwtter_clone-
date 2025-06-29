@@ -5,6 +5,7 @@ dotenv.config();
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import postRoutes from "./routes/post.routes.js";
+import NotificationRoutes from "./routes/Notification.routes.js";
 // Importing the connectMongoDB function to establish a connection to MongoDB
 import connectMongoDB from "./db/connectMongoDB.js";
 import cookieParser from "cookie-parser";
@@ -21,6 +22,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/Notification", NotificationRoutes);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectMongoDB();
