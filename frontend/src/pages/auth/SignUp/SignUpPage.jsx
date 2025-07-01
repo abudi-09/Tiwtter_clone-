@@ -7,6 +7,7 @@ import { MdOutlineMail } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
 import { MdPassword } from "react-icons/md";
 import { MdDriveFileRenameOutline } from "react-icons/md";
+import { useMutation } from "@tanstack/react-query";
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -15,17 +16,35 @@ const SignUpPage = () => {
     fullName: "",
     password: "",
   });
-
+  const { mutate, isError, isPending, error } = useMutation({
+    mutationFn: async ({ email, username, fullName, password }) => {
+      try {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          header: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, fullName, username, password }),
+        });
+        if (!res.ok) throw new Error("something went wrong");
+        const data = await res.json();
+        if (data.error) new Error(data.error);
+        console.log(data);
+        return data;
+      } catch (error) {
+        console.error(error);
+        toast.error(error.message);
+      }
+    },
+  });
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData);
+    mutate(formData);
   };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const isError = false;
 
   return (
     <div className="max-w-screen-xl mx-auto flex h-screen px-10">
