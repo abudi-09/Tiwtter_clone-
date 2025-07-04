@@ -60,6 +60,7 @@ const SignUpPage = () => {
           <h1 className="text-4xl font-extrabold text-white">Join today.</h1>
           <label className="input input-bordered rounded flex items-center gap-2">
             <MdOutlineMail />
+
             <input
               type="email"
               className="grow"
