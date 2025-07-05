@@ -1,12 +1,33 @@
 import XSvg from "../svgs/X";
-
 import { MdHomeFilled } from "react-icons/md";
 import { IoNotifications } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { BiLogOut } from "react-icons/bi";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const Sidebar = () => {
+  const { mutate, isPending, isError, error } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch("api/auth/logout", {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "something went wrong");
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Logout successful");
+    },
+  });
+
   const data = {
     fullName: "John Doe",
     username: "johndoe",
@@ -38,7 +59,6 @@ const Sidebar = () => {
               <span className="text-lg hidden md:block">Notifications</span>
             </Link>
           </li>
-
           <li className="flex justify-center md:justify-start">
             <Link
               to={`/profile/${data?.username}`}
@@ -66,7 +86,10 @@ const Sidebar = () => {
                 </p>
                 <p className="text-slate-500 text-sm">@{data?.username}</p>
               </div>
-              <BiLogOut className="w-5 h-5 cursor-pointer" />
+              <BiLogOut
+                className="w-5 h-5 cursor-pointer"
+                onClick={() => mutate()}
+              />
             </div>
           </Link>
         )}
