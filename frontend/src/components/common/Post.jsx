@@ -5,6 +5,15 @@ import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+const Post = ({ post }) => {
+  const [comment, setComment] = useState("");
+  const postOwner = post.user;
+  const isLiked = false;
+  const isMyPost = true;
+  const formattedDate = "1h";
+  const isCommenting = false;
+
+
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -16,6 +25,11 @@ const Post = ({ post }) => {
   const formattedDate = "1h";
 
   const isCommenting = false;
+  
+  const commentsCount = Array.isArray(post.comments) ? post.comments.length : 0;
+  const likesCount = Array.isArray(post.likes) ? post.likes.length : 0;
+
+
 
   const handleDeletePost = () => {};
 
