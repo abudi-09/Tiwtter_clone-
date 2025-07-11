@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { FaRegComment } from "react-icons/fa";
+=======
+  import { FaRegComment } from "react-icons/fa";
+>>>>>>> c1ab930a0fee5ee87722da77a10caefc6017b3c9
 import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
