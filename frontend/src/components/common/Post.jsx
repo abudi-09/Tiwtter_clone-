@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { FaRegComment } from "react-icons/fa";
-=======
-  import { FaRegComment } from "react-icons/fa";
->>>>>>> c1ab930a0fee5ee87722da77a10caefc6017b3c9
 import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
@@ -20,15 +16,12 @@ const Post = ({ post }) => {
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const queryClient = useQueryClient();
   const postOwner = post.user;
-
   // Defensive checks for comments and likes
   const comments = Array.isArray(post.comments) ? post.comments : [];
   const likes = Array.isArray(post.likes) ? post.likes : [];
 
-  const isLiked =
-    likes.length > 0 && authUser?._id ? likes.includes(authUser._id) : false;
-
-  const isMyPost = authUser?._id === post.user._id;
+  const isLiked = likes.includes(authUser._id);
+  const isMyPost = authUser._id === post.user._id;
   const formattedDate = formatPostDate(post.createdAt);
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({

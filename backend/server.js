@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+
 import { v2 as cloudinary } from "cloudinary";
 dotenv.config();
 import authRoutes from "./routes/auth.routes.js";
@@ -10,8 +11,10 @@ import NotificationRoutes from "./routes/Notification.routes.js";
 import connectMongoDB from "./db/connectMongoDB.js";
 import cookieParser from "cookie-parser";
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
 cloudinary.config({
   cloud_name: process.env.cloudinary_cloud_name,
   api_key: process.env.cloudinary_api_key,
