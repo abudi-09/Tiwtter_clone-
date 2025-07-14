@@ -89,23 +89,25 @@ export const getSuggestedUsers = async (req, res) => {
   }
 };
 export const updateUser = async (req, res) => {
-  const {
-    fullName,
-    email,
-    username,
-    currentPassword,
-    newPassword,
-    bio,
-    link,
-    profileImg,
-    coverImg,
-  } = req.body || {};
   const userId = req.user._id;
 
   try {
+    let {
+      fullName,
+      email,
+      username,
+      currentPassword,
+      newPassword,
+      bio,
+      link,
+      profileImg,
+      coverImg,
+    } = req.body || {};
+
     let user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Password update validation
     if (
       (!newPassword && currentPassword) ||
       (!currentPassword && newPassword)
@@ -129,29 +131,29 @@ export const updateUser = async (req, res) => {
       user.password = await bcrypt.hash(newPassword, salt);
     }
 
+    // Handle profile image upload
     if (profileImg) {
       if (user.profileImg) {
-        // https://res.cloudinary.com/dyfqon1v6/image/upload/v1712997552/zmxorcxexpdbh8r0bkjb.png
         await cloudinary.uploader.destroy(
           user.profileImg.split("/").pop().split(".")[0]
         );
       }
-
       const uploadedResponse = await cloudinary.uploader.upload(profileImg);
       profileImg = uploadedResponse.secure_url;
     }
 
+    // Handle cover image upload
     if (coverImg) {
       if (user.coverImg) {
         await cloudinary.uploader.destroy(
           user.coverImg.split("/").pop().split(".")[0]
         );
       }
-
       const uploadedResponse = await cloudinary.uploader.upload(coverImg);
       coverImg = uploadedResponse.secure_url;
     }
 
+    // Update user fields
     user.fullName = fullName || user.fullName;
     user.email = email || user.email;
     user.username = username || user.username;
@@ -162,8 +164,7 @@ export const updateUser = async (req, res) => {
 
     user = await user.save();
 
-    // password should be null in response
-    user.password = null;
+    user.password = null; // hide password in response
 
     return res.status(200).json(user);
   } catch (error) {

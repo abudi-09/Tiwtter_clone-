@@ -1,8 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
-
-import { v2 as cloudinary } from "cloudinary";
 dotenv.config();
+import { v2 as cloudinary } from "cloudinary";
+
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import postRoutes from "./routes/post.routes.js";
