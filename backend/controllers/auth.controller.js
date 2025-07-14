@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
-import { protectRoute } from "../middleware/protectRoutes.js";
+import { protectRoute } from "../middleware/protectRoute.js";
 export const signup = async (req, res) => {
   try {
     const { fullName, username, email, password } = req.body;

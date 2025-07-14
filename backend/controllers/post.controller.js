@@ -1,200 +1,188 @@
-import User from "../models/user.model.js"; // Import User model
-import Post from "../models/post.model.js"; // Import Post model
-import { v2 as cloudinary } from "cloudinary"; // Import Cloudinary for image uploads
-import Notification from "../models/notification.model.js"; // Import Notification model
+import Notification from "../models/notification.model.js";
+import Post from "../models/post.model.js";
+import User from "../models/user.model.js";
+3;
+import { v2 as cloudinary } from "cloudinary";
 
 export const createPost = async (req, res) => {
-  // Function to create a new post
   try {
-    const { text } = req.body; // Extract text from the request body
-    let { img } = req.body; // Extract img from the request body
-    const userId = req.user._id.toString(); // Ensure userId is a string
-    const user = await User.findById(userId); // Fetch the user by ID
-    if (!user) {
-      // Check if the user exists
-      console.log("User not found");
-      return res.status(404).json({ error: "User not found" });
-    }
+    const { text } = req.body;
+    let { img } = req.body;
+    const userId = req.user._id.toString();
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     if (!text && !img) {
-      // Ensure at least one of text or img is provided
-      return res.status(400).json({ error: "Text or image is required" });
+      return res.status(400).json({ error: "Post must have text or image" });
     }
+
     if (img) {
-      // If an image is provided, upload it to Cloudinary
-      const uploadResponse = await cloudinary.uploader.upload(img, {
-        folder: "posts", // Specify the folder in Cloudinary
-      });
-      img = uploadResponse.secure_url; // Get the secure URL of the uploaded image
+      const uploadedResponse = await cloudinary.uploader.upload(img);
+      img = uploadedResponse.secure_url;
     }
+
     const newPost = new Post({
-      // Create a new post
-      user: userId, // Use the user ID from the request
-      text, // Use the text from the request body
-      img, // Use the image from the request body
+      user: userId,
+      text,
+      img,
     });
 
-    await newPost.save(); // Save the new post to the database
-    res.status(201).json(newPost); // Respond with the created post
+    await newPost.save();
+    res.status(201).json(newPost);
   } catch (error) {
-    console.log("Error in createPost: ", error.message);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Internal server error" });
+    console.log("Error in createPost controller: ", error);
   }
 };
+
 export const deletePost = async (req, res) => {
-  // Function to delete a post
   try {
-    const postId = req.params.id; // Get the post ID from the request parameters
-    const post = await Post.findById(postId); // Find the post by ID
+    const post = await Post.findById(req.params.id);
     if (!post) {
-      // Check if the post exists
       return res.status(404).json({ error: "Post not found" });
     }
+
     if (post.user.toString() !== req.user._id.toString()) {
-      // Check if the user is authorized to delete the post
       return res
-        .status(403)
+        .status(401)
         .json({ error: "You are not authorized to delete this post" });
     }
+
     if (post.img) {
-      // If the post has an image, delete it from Cloudinary
-      const imgId = post.img.split("/").pop().split(".")[0]; // Extract the public ID from the image URL
-      await cloudinary.uploader.destroy(imgId); // Delete the image from Cloudinary
+      const imgId = post.img.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(imgId);
     }
-    await Post.findByIdAndDelete(req.params.id); // Delete the post from the database
-    res.status(200).json({ message: "Post deleted successfully" }); // Respond with success message
+
+    await Post.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {
-    console.log("Error in deletePost: ", error.message);
-    res.status(500).json({ error: error.message });
+    console.log("Error in deletePost controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-export const commentPosts = async (req, res) => {
-  // Function to comment on a post
+
+export const commentOnPost = async (req, res) => {
   try {
-    const postId = req.params.id; // Get the post ID from the request parameters
-    const { text } = req.body; // Extract text from the request body
+    const { text } = req.body;
+    const postId = req.params.id;
+    const userId = req.user._id;
+
     if (!text) {
-      // Ensure text is provided
-      return res.status(400).json({ error: "Comment text is required" });
+      return res.status(400).json({ error: "Text field is required" });
     }
-    const post = await Post.findById(postId); // Find the post by ID
+    const post = await Post.findById(postId);
+
     if (!post) {
-      // Check if the post exists
       return res.status(404).json({ error: "Post not found" });
     }
-    const comment = {
-      text, // Use the text from the request body
-      user: req.user._id, // Use the user ID from the request
-    };
-    post.Comments.push(comment); // Add the comment to the post's comments array
-    await post.save(); // Save the updated post to the database
-    res.status(200).json(post); // Respond with the updated post
+
+    const comment = { user: userId, text };
+
+    post.comments.push(comment);
+    await post.save();
+
+    res.status(200).json(post);
   } catch (error) {
-    console.log("Error in commentPosts: ", error.message);
-    res.status(500).json({ error: error.message });
+    console.log("Error in commentOnPost controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
+
 export const likeUnlikePost = async (req, res) => {
-  // Function to like or unlike a post
   try {
     const userId = req.user._id;
-    // Get the user ID from the request
-    const { id: postId } = req.params; // Get the post ID from the request parameters
+    const { id: postId } = req.params;
 
-    const post = await Post.findById(postId); // Find the post by ID
+    const post = await Post.findById(postId);
+
     if (!post) {
-      // Check if the post exists
       return res.status(404).json({ error: "Post not found" });
     }
-    // Get the user ID from the request
-    const userLikePost = post.like.includes(userId); // Check if the post is already liked
-    if (userLikePost) {
-      await Post.findByIdAndUpdate(
-        postId,
-        { $pull: { like: userId } },
-        { new: true }
+
+    const userLikedPost = post.likes.includes(userId);
+
+    if (userLikedPost) {
+      // Unlike post
+      await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
+      await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
+
+      const updatedLikes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
       );
-      await user.findByIdAndUpdate(
-        userId,
-        { $pull: { likes: postId } },
-        { new: true }
-      ); // Remove the like from the post and user
-      return res.status(200).json({ message: "Post unliked successfully" });
+      res.status(200).json(updatedLikes);
     } else {
-      post.like.push(userId);
-      await User.findByIdAndUpdate(
-        userId,
-        { $addToSet: { likes: postId } },
-        { new: true }
-      ); // Add the like to the post and user
+      // Like post
+      post.likes.push(userId);
+      await User.updateOne({ _id: userId }, { $push: { likedPosts: postId } });
       await post.save();
 
       const notification = new Notification({
-        type: "like",
         from: userId,
         to: post.user,
-        post: postId,
+        type: "like",
       });
-
       await notification.save();
 
-      return res.status(200).json({ message: "Post liked successfully" });
+      const updatedLikes = post.likes;
+      res.status(200).json(updatedLikes);
     }
-
-    // Respond with the updated post
   } catch (error) {
-    console.log("Error in likeUnlikePost: ", error.message);
-    res.status(500).json({ error: error.message });
+    console.log("Error in likeUnlikePost controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
+
 export const getAllPosts = async (req, res) => {
-  // Function to get all posts
   try {
     const posts = await Post.find()
       .sort({ createdAt: -1 })
       .populate({
         path: "user",
-        select: "-password", // Populate user details
-      }) // Sort posts by creation date in descending order
-      .populate({
-        path: "Comments.user",
-        select: "-password", // Populate user details for comments
-      });
-    if (!posts || posts.length === 0) {
-      // Check if there are no posts
-      return res.status(404).json({ message: "No posts found" });
-    }
-    res.status(200).json(posts); // Respond with the list of posts
-  } catch (error) {
-    console.log("Error in getAllPosts: ", error.message);
-    res.status(500).json({ error: error.message });
-  }
-};
-export const getlikedPosts = async (req, res) => {
-  // Function to get liked posts of the current user
-  try {
-    const userId = req.params._id; // Get the user ID from the request
-    if (!user) {
-      // Check if the user exists
-      return res.status(404).json({ error: "User not found" });
-    }
-    const likedPosts = await post
-      .find({ _id: { $in: user.likedPosts } })
-      .populate({
-        path: "user",
-        select: "-password", // Populate user details
+        select: "-password",
       })
       .populate({
-        path: "Comments.user",
-        select: "-password", // Populate user details for comments
+        path: "comments.user",
+        select: "-password",
       });
 
-    res.status(200).json(user.likedPosts); // Respond with the user's liked posts
+    if (posts.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    res.status(200).json(posts);
   } catch (error) {
-    console.log("Error in getlikedPosts: ", error.message);
-    res.status(500).json({ error: error.message });
+    console.log("Error in getAllPosts controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-export const getfollowingPosts = async (req, res) => {
+
+export const getLikedPosts = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const likedPosts = await Post.find({ _id: { $in: user.likedPosts } })
+      .populate({
+        path: "user",
+        select: "-password",
+      })
+      .populate({
+        path: "comments.user",
+        select: "-password",
+      });
+
+    res.status(200).json(likedPosts);
+  } catch (error) {
+    console.log("Error in getLikedPosts controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getFollowingPosts = async (req, res) => {
   try {
     const userId = req.user._id;
     const user = await User.findById(userId);
@@ -219,35 +207,28 @@ export const getfollowingPosts = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 export const getUserPosts = async (req, res) => {
-  // Function to get posts of a specific user
   try {
-    const { username } = req.params; // Get the username from the request parameters
-    const user = await User.findOne({ username }).select("-password"); // Find the user by username and exclude password
-    if (!user) {
-      // Check if the user exists
-      return res.status(404).json({ error: "User not found" });
-    }
-    const posts = await Post.find({ user: user._id }) // Find posts by user ID
-      .sort({ createdAt: -1 }) // Sort posts by creation date in descending order
+    const { username } = req.params;
+
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const posts = await Post.find({ user: user._id })
+      .sort({ createdAt: -1 })
       .populate({
         path: "user",
-        select: "-password", // Populate user details excluding password
+        select: "-password",
       })
       .populate({
-        path: "Comments.user",
-        select: "-password", // Populate user details for comments excluding password
+        path: "comments.user",
+        select: "-password",
       });
-    res.status(200).json(posts); // Respond with the user's posts
+
+    res.status(200).json(posts);
   } catch (error) {
-    console.log("Error in getUserPosts: ", error.message);
-    res.status(500).json({ error: error.message }); // Respond with error message
+    console.log("Error in getUserPosts controller: ", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-// This code defines the functions for creating, deleting, commenting on, liking/unliking, and retrieving posts.
-// It uses Mongoose to interact with the MongoDB database and Cloudinary for image uploads.
-// The functions handle various operations related to posts in a social media application, including error handling and response formatting.
-// The functions are exported for use in the routes file, allowing the application to handle post-related
-// operations such as creating posts, commenting on posts, liking/unliking posts, deleting posts, and retrieving all posts or posts from followed users.
-// The code also includes error handling to ensure that appropriate responses are sent in case of errors,
-// such as when a post or user is not found, or when there is an issue with the database operations.

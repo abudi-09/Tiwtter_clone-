@@ -16,12 +16,10 @@ const Post = ({ post }) => {
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const queryClient = useQueryClient();
   const postOwner = post.user;
-  // Defensive checks for comments and likes
-  const comments = Array.isArray(post.comments) ? post.comments : [];
-  const likes = Array.isArray(post.likes) ? post.likes : [];
+  const isLiked = post.likes.includes(authUser._id);
 
-  const isLiked = likes.includes(authUser._id);
   const isMyPost = authUser._id === post.user._id;
+
   const formattedDate = formatPostDate(post.createdAt);
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
@@ -62,6 +60,10 @@ const Post = ({ post }) => {
       }
     },
     onSuccess: (updatedLikes) => {
+      // this is not the best UX, bc it will refetch all posts
+      // queryClient.invalidateQueries({ queryKey: ["posts"] });
+
+      // instead, update the cache directly for that post
       queryClient.setQueryData(["posts"], (oldData) => {
         return oldData.map((p) => {
           if (p._id === post._id) {
@@ -70,7 +72,13 @@ const Post = ({ post }) => {
           return p;
         });
       });
+      if (updatedLikes.includes(authUser._id)) {
+        toast.success("You liked the post!");
+      } else {
+        toast.success("You unliked the post!");
+      }
     },
+
     onError: (error) => {
       toast.error(error.message);
     },
@@ -179,7 +187,7 @@ const Post = ({ post }) => {
               >
                 <FaRegComment className="w-4 h-4  text-slate-500 group-hover:text-sky-400" />
                 <span className="text-sm text-slate-500 group-hover:text-sky-400">
-                  {comments.length}
+                  {post.comments.length}
                 </span>
               </div>
               {/* We're using Modal Component from DaisyUI */}
@@ -190,12 +198,12 @@ const Post = ({ post }) => {
                 <div className="modal-box rounded border border-gray-600">
                   <h3 className="font-bold text-lg mb-4">COMMENTS</h3>
                   <div className="flex flex-col gap-3 max-h-60 overflow-auto">
-                    {comments.length === 0 && (
+                    {post.comments.length === 0 && (
                       <p className="text-sm text-slate-500">
                         No comments yet 🤔 Be the first one 😉
                       </p>
                     )}
-                    {comments.map((comment) => (
+                    {post.comments.map((comment) => (
                       <div key={comment._id} className="flex gap-2 items-start">
                         <div className="avatar">
                           <div className="w-8 rounded-full">
@@ -263,7 +271,7 @@ const Post = ({ post }) => {
                     isLiked ? "text-pink-500" : "text-slate-500"
                   }`}
                 >
-                  {likes.length}
+                  {post.likes.length}
                 </span>
               </div>
             </div>

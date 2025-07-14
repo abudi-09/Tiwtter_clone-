@@ -3,7 +3,7 @@ import {
   getNotifications,
   deleteNotification,
 } from "../controllers/Notification.controller.js";
-import { protectRoute } from "../middleware/protectRoutes.js";
+import { protectRoute } from "../middleware/protectRoute.js";
 const router = express.Router();
 router.get("/", protectRoute, getNotifications); // Get all notifications for the authenticated user
 router.delete("/", protectRoute, deleteNotification); // Delete a specific notification by ID

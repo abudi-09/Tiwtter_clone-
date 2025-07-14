@@ -24,6 +24,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+
 app.use("/api/posts", postRoutes);
 app.use("/api/Notification", NotificationRoutes);
 app.listen(PORT, () => {

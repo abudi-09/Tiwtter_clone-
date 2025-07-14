@@ -12,15 +12,14 @@ const postSchema = new mongoose.Schema(
     },
     img: {
       type: String,
-      default: "",
     },
-    like: [
+    likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
     ],
-    Comments: [
+    comments: [
       {
         text: {
           type: String,
@@ -34,16 +33,9 @@ const postSchema = new mongoose.Schema(
       },
     ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Post = mongoose.model("Post", postSchema);
-export default Post;
 
-//   const currentUser = await User.findById(req.user._id);
-//   const following = currentUser.following;
-//   const suggestedUsers = await User.find({
-//     _id: { $nin: [...following, req.user._id] },
-//   }).limit(10);
+export default Post;
